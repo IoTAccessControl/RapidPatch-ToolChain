@@ -1,0 +1,12 @@
+mov r0, 0x0
+ldxb r2, [r1]
+jeq r2, 0x0, +8
+mov r0, 0x0
+add r1, 0x1
+lsh r2, 0x38
+arsh r2, 0x38
+add r0, r2
+ldxb r2, [r1]
+add r1, 0x1
+jne r2, 0x0, -6
+exit

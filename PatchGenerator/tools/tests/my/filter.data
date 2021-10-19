@@ -1,0 +1,17 @@
+-- asm
+ldxdw r2, [r1]
+ldxdw r2, [r2]
+ldxb r3, [r2]
+lsh r3, 0x8
+ldxb r4, [r2+1]
+or r3, r4
+ldxdw r1, [r1+8]
+sub r1, r3
+mov r0, 0x1
+jgt r2, r1, +1
+mov r0, 0x0
+exit
+
+-- mem
+
+-- result
