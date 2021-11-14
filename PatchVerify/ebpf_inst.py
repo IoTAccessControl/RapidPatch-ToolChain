@@ -2,6 +2,7 @@
 
 import ctypes
 
+
 # typedef struct ebpf_inst {
 # 	u8 opcode;
 # 	u8 dst : 4;
@@ -23,6 +24,7 @@ class EbpfInst(ctypes.Structure):
 
 	def dump(self):
 		print(f"op={self.opcode} src={self.src} dst={self.dst}")
+
 
 EBPF_CLS_MASK = 0x07
 EBPF_ALU_OP_MASK = 0xf0
@@ -59,8 +61,8 @@ EBPF_ALU_MOD = 0xc0
 EBPF_ALU_XOR = 0xa0
 EBPF_ALU_ARSH = 0xc0
 
-EBPF_OP_ADD_IMM = (EBPF_CLS_ALU | EBPF_SRC_IMM | EBPF_ALU_ADD) # BPF_K
-EBPF_OP_ADD_REG = (EBPF_CLS_ALU | EBPF_SRC_REG | EBPF_ALU_ADD) # BPF_X
+EBPF_OP_ADD_IMM = (EBPF_CLS_ALU | EBPF_SRC_IMM | EBPF_ALU_ADD)  # BPF_K
+EBPF_OP_ADD_REG = (EBPF_CLS_ALU | EBPF_SRC_REG | EBPF_ALU_ADD)  # BPF_X
 EBPF_OP_SUB_IMM = (EBPF_CLS_ALU | EBPF_SRC_IMM | EBPF_ALU_SUB)
 EBPF_OP_SUB_REG = (EBPF_CLS_ALU | EBPF_SRC_REG | EBPF_ALU_SUB)
 EBPF_OP_MUL_IMM = (EBPF_CLS_ALU | EBPF_SRC_IMM | 0x20)
@@ -207,7 +209,7 @@ def load_ebpf_bin(ebpf_bin):
 		while fp.readinto(inst) == nbytes:
 			insts.append(inst)
 			inst = EbpfInst()
-		# break
+	# break
 	return insts
 
 
@@ -216,10 +218,22 @@ def load_ebpf_code(code: bytes):
 	npos = 0
 	insts = []
 	while npos < len(code):
-		bys = code[npos:npos+nbytes]
+		bys = code[npos:npos + nbytes]
 		if len(bys) == nbytes:
 			data = EbpfInst.from_buffer_copy(bys)
 			# data.dump()
 			insts.append(data)
 		npos += nbytes
 	return insts
+
+
+def dump_ebpf_code(byte_code):
+	uc_str = "".join('\\x{:02x}'.format(c) for c in byte_code)
+	# print(byte_code, uc_str)
+	code_lines = []
+	pos, li_sz = 0, 80
+	while pos < len(uc_str):
+		code_lines.append('"{}"'.format(uc_str[pos:pos + li_sz]))
+		pos += li_sz
+	fmt_str = "\n".join(code_lines)
+	print(fmt_str)

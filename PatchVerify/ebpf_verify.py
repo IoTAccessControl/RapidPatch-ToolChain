@@ -139,14 +139,14 @@ class LoopChecker(BaseChecker):
 
 	def _interpret(self):
 		opcode = self.cur_inst.opcode
-		if opcode == EBPF_OP_JSGT_REG or opcode == EBPF_OP_JLE_REG or \
-				opcode == EBPF_OP_JEQ_REG or opcode == EBPF_OP_JSET_REG or \
-				opcode == EBPF_OP_JNE_REG or opcode == EBPF_OP_JSGT_REG or \
-				opcode == EBPF_OP_JSGE_REG or opcode == EBPF_OP_JSLT_REG or \
-				opcode == EBPF_OP_JSLE_REG:
-			self.is_dangerous("Jump to Register!!! Inst: " + str(opcode) + " At Inst: " + str(self.pc))
-		elif self.OFF < 0:
-			self.is_dangerous("Contains Loops. Backward Jump!")
+		# if opcode == EBPF_OP_JSGT_REG or opcode == EBPF_OP_JLE_REG or \
+		# 		opcode == EBPF_OP_JEQ_REG or opcode == EBPF_OP_JSET_REG or \
+		# 		opcode == EBPF_OP_JNE_REG or opcode == EBPF_OP_JSGT_REG or \
+		# 		opcode == EBPF_OP_JSGE_REG or opcode == EBPF_OP_JSLT_REG or \
+		# 		opcode == EBPF_OP_JSLE_REG:
+		# 	self.is_dangerous("Jump to Register!!! Inst: " + str(opcode) + " At Inst: " + str(self.pc))
+		if BPF_CLASS(opcode) == EBPF_CLS_JMP and self.OFF < 0:
+			self.is_dangerous("Contains Loops. Backward Jump! At Inst: " + str(self.pc))
 
 	def get_result(self):
 		if len(self.errors) > 0:
@@ -183,6 +183,7 @@ class Verifier:
 			print("----> Warning. Current Patch is not a filter-patch!!!")
 		else:
 			print("----> Cheers. Current Patch is a filter-patch!!!")
+		return failed
 
 
 def do_verify(ebpf_bytes):
@@ -190,4 +191,4 @@ def do_verify(ebpf_bytes):
 	verifier = Verifier(insts)
 	verifier.add_checker(DangerousInstWarningChecker(), LoopChecker())
 	verifier.do_verify()
-	verifier.report()
+	return verifier.report()

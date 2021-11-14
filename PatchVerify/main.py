@@ -14,10 +14,15 @@ def parse_args():
 	return sys.argv[1]
 
 
-def main(ebpf_bytes):
-	logging.info("Start to verify eBPF bytecode: %s", ebpf_bytes)
+def main(ebpf_bin_file):
+	logging.info("Start to verify eBPF bytecode: %s", ebpf_bin_file)
 	from .ebpf_verify import do_verify
-	do_verify(ebpf_bytes)
+	not_filter = do_verify(ebpf_bin_file)
+
+	if not not_filter:
+		from .sfi_post_process import do_sfi_pass
+		out_fi = ebpf_bin_file.replace(".bin", "_sfi.bin")
+		do_sfi_pass(ebpf_bin_file, out_fi)
 
 
 if __name__ == "__main__":
