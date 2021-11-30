@@ -1,0 +1,1 @@
+{"patch_type": 2, "version": 1, "bin": "test-files/bin/test_cve2.bin", "run_type": 2, "run_priority": 0, "iterations": 2048, "trigger_type": 2, "install_addr": 134219958}
