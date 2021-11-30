@@ -1,8 +1,13 @@
 # encoding: utf8
 from .ebpf_inst import *
+import os
+import json
 import ctypes
 import PatchVerify.utils as utils
+import logging
 import PatchGenerator.tools.ubpf.disassembler as dissam
+
+logger = logging.getLogger("PatchVerifier")
 
 R0 = 0
 R9 = 9
@@ -27,21 +32,21 @@ class SFIBasePass:
 
 class LoopLimitPass:
 
-	def __init__(self):
+	def __init__(self, conf):
 		self.out_insts = []
 		self.intro_insts = []
 		self.stack_used = 80 # sfi stack variable
 		self.store_reg = 0 # sfi store reg
-		self.max_iteration = MAX_ITERS
+		self.max_iteration = conf.get("iterations", MAX_ITERS)
 		self.processed = False
 
 	def do_pass(self, insts):
 		# for idx, inst in enumerate(insts):
 		# 	self.intro_insts.append(InstWrapper(inst, idx))
 		if not self.check_need_process(insts):
-			print("Do not need to perform SFI Loop Pass")
+			logger.info("Do not need to perform SFI Loop Pass")
 			return [], False
-		print("Start to perform SFI Loop Pass...")
+		logger.info("Start to perform SFI Loop Pass...")
 		self.set_sfi_reg(insts)
 		for idx, inst in enumerate(insts):
 			winst = InstWrapper(inst, idx)
@@ -89,7 +94,7 @@ class LoopLimitPass:
 	def set_sfi_head_tail(self):
 		# set stack initial value
 		initial_inst = self.add_sfi_initial()
-		print(initial_inst, self.store_reg)
+		# print(initial_inst, self.store_reg)
 		if initial_inst and len(self.intro_insts) > 0:
 			self.intro_insts[0].sub_insts.append(initial_inst)
 
@@ -183,14 +188,25 @@ class LoopLimitPass:
 
 class SFIPostProcess:
 
-	def __init__(self, insts):
-		self.insts = insts
+	def __init__(self, in_fi):
+		self.	insts = load_ebpf_bin(in_fi)
 		self.passes = []
 		self.out_insts = None
+		self.conf_file = in_fi.replace(".bin", ".json")
+		self.conf = {}
+		self.__load_conf()
 		self.__setup_passes()
 
 	def __setup_passes(self):
-		self.passes.append(LoopLimitPass())
+		self.passes.append(LoopLimitPass(self.conf))
+
+	def __load_conf(self):
+		if not os.path.exists(self.conf_file):
+			logger.error(f"Failed to load conf from file ({self.conf_file}).")
+			return
+		with open(self.conf_file, "r") as fp:
+			self.conf = json.load(fp)
+			logger.info("Load Patch Conf: " + str(self.conf))
 
 	def process(self):
 		in_insts = self.insts
@@ -221,8 +237,7 @@ def verify_sfi(out_fi):
 
 
 def do_sfi_pass(in_fi, out_fi):
-	insts = load_ebpf_bin(in_fi)
-	sfi = SFIPostProcess(insts)
+	sfi = SFIPostProcess(in_fi)
 	ret = sfi.process()
 	if ret:
 		print(f"Add SFI Post process to the eBPF bytecode: {out_fi}")

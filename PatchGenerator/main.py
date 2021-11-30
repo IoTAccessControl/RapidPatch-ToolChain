@@ -1,4 +1,5 @@
 # encoding: utf8
+import os
 import sys
 import logging
 
@@ -17,8 +18,12 @@ def parse_args():
 
 def main(code, dst):
 	from PatchGenerator.tools.compile_code import do_compile
+	from PatchGenerator.parse_conf import gen_patch_deploy_conf
 	logging.info("Start to compile eBPF source code file: %s  Save to: %s", code, dst)
 	do_compile(code, dst)
+	conf = code.replace(".c", ".yaml")
+	if os.path.exists(conf):
+		gen_patch_deploy_conf(dst, conf)
 
 
 if __name__ == "__main__":

@@ -4,14 +4,15 @@ import logging
 
 CMD_GEN = "gen"
 CMD_VERIFY = "verify"
+CMD_MONITOR = "monitor"
 
 
 def usage():
-	print("Usage: python3 main.py [gen code.c out.bin | verify code.bin]")
+	print("Usage: python3 main.py [gen code.c out.bin | verify code.bin | monior serial-port]")
 
 
 def init_logger():
-	logging.basicConfig(level=logging.INFO)
+	logging.basicConfig(level=logging.INFO, format='%(name)s -> %(message)s')
 
 
 def main():
@@ -29,6 +30,9 @@ def main():
 	elif cmd == CMD_VERIFY:
 		import PatchVerify.main as verifier
 		verifier.main(args[0])
+	elif cmd == CMD_MONITOR:
+		import PatchDeploy.main as deploy
+		deploy.main(args[0])
 
 
 if __name__ == "__main__":

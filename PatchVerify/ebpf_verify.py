@@ -1,5 +1,6 @@
 # encoding: utf8
 from .ebpf_inst import *
+import os
 import ctypes
 import PatchVerify.utils as utils
 
@@ -158,13 +159,18 @@ class LoopChecker(BaseChecker):
 
 class Verifier:
 
-	def __init__(self, insts):
-		self.insts = insts
+	def __init__(self, ebpf_file):
+		self.insts = load_ebpf_bin(ebpf_file)
+		self.conf_file = ebpf_file.replace(".bin", ".json")
 		self.checkers = []
 
 	def do_verify(self):
 		for checker in self.checkers:
 			checker.check(self.insts)
+
+	def load_conf(self):
+		if not os.path.exists(self.conf_file):
+			return
 
 	def add_checker(self, *checker: BaseChecker):
 		for ch in checker:
@@ -186,9 +192,12 @@ class Verifier:
 		return failed
 
 
-def do_verify(ebpf_bytes):
-	insts = load_ebpf_bin(ebpf_bytes)
-	verifier = Verifier(insts)
+def check_patch_conf():
+	pass
+
+
+def do_verify(ebpf_file):
+	verifier = Verifier(ebpf_file)
 	verifier.add_checker(DangerousInstWarningChecker(), LoopChecker())
 	verifier.do_verify()
 	return verifier.report()

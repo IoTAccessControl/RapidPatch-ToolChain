@@ -1,0 +1,17 @@
+patch_type: filter_patch
+version: 1
+
+# Trigger settings
+trigger_point:
+  function_position: dynamic_patch_dummy_cve1
+  symbol_file: "../VulDevices/PlatformIO/stm32f4xx/symbol.map"
+
+trigger_type: KPROBE
+
+# Running Setting: Interpreter | JIT
+run_type: JIT
+iteration_threshold: default # number or default
+priority: default # high medium low or default
+
+# Compile Setting
+variable_map:
