@@ -49,7 +49,7 @@ Unsafe -> Writing to memory!!! Inst: 99 At Inst: 1
 
 
 ## About SFI
-Our first version SFI is implemented directly in the libebpf. However, it seesm to be deleted durbing branch merging. [Git History](github.com/IoTAccessControl/RapidPatch-Runtime-AE/blob/448fe8fdac6fa14b600257ddc85656af6f56e3a3/libebpf/src/ebpf_vm.c#L520).   
+Our first version SFI is implemented directly in the libebpf. However, it seesm to be deleted durbing branch merging. [Git History](https://github.com/IoTAccessControl/RapidPatch-Runtime-AE/blob/448fe8fdac6fa14b600257ddc85656af6f56e3a3/libebpf/src/ebpf_vm.c#L520).   
 
 Now, to make it easier to use, we have added a new SFI post process compiling pass for our toolchain and you can now get the eBPF bytecode with SFI for the filter patches with unbounded loop.  The maxium loop iterations is 2048 (set in PatchVerify/sfi_post_process.py:10)
 

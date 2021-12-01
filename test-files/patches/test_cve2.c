@@ -35,7 +35,7 @@ uint64_t filter(stack_frame *frame) {
     uint8_t len = (uint8_t)(((*(destopt + 1) + 1) << 3) - 2);
     uint8_t optlen = 0;
     uint32_t op = 0;
-    uint32_t ret_code = 0;
+    uint32_t ret_code = 555;
 
     while (len) {
         optlen = (uint8_t)(*(option + 1) + 2);

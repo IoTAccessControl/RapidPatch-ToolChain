@@ -13,8 +13,8 @@ struct buf_ctx {
 
 uint64_t filter(stack_frame *frame) {
     struct buf_ctx *buf = (struct buf_ctx *)(frame->r0);
-    uint32_t op = 0;
-    uint32_t ret_code = 0;
+    uint32_t op = 2;
+    uint32_t ret_code = 555;
     unsigned char end_index = 0;
     
     for (int i = 0; i < 5; i++) {
