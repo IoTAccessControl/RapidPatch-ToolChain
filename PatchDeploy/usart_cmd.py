@@ -24,13 +24,26 @@ class PatchPacket(ctypes.Structure):
 	_fields_ = [
 		('patch_type', ctypes.c_ushort),
 		('code_len', ctypes.c_ushort),
-		('patch_point', ctypes.c_uint), # addr or patch id
+		('patch_setting', ctypes.c_uint32),
+		('sign', ctypes.c_uint32),
+		('patch_point', ctypes.c_uint32), # addr or patch id
 		# ('code', ctypes) # ebpf bytecode
 	]
 
 	@staticmethod
+	def settings(conf):
+		run_type = conf["run_type"]
+		iters = conf["iterations"]
+		pri = conf["run_priority"]
+		val = ((run_type & 0x3) << 24) + ((pri & 0x3) << 16) + (iters & 0xffff)
+		print(int(val), (run_type & 0x11) << 24, run_type & 0b11)
+		return ctypes.c_uint32(val).value
+
+	@staticmethod
 	def from_conf(conf):
-		pkt = PatchPacket(conf["trigger_type"], len(conf["bin"]), conf["install_addr"])
+		patch_setting = PatchPacket.settings(conf)
+		pkt = PatchPacket(conf["trigger_type"], len(conf["bin"]), patch_setting, conf['sign'], conf["install_addr"])
+		print("Settings: ", patch_setting)
 		return bytearray(pkt) + conf["bin"]
 
 
@@ -67,6 +80,18 @@ class MyTerm(miniterm.Miniterm):
 			self.alive = False
 			raise
 
+	def patch_hash(self, data):
+		def u32(v):
+			return ctypes.c_uint32(v).value
+		h = u32(5381)
+		# for c in data:
+		# 	h = u32(u32(h << 5) + u32(h)) + u32(c)
+		# 	h = u32(h)
+		for c in data:
+			h += u32(c)
+			h %= 20000
+		return h
+
 	def install_patch(self, patch_path, text):
 		if not os.path.exists(patch_path):
 			self.console.write(f"\n[PY]: Failed: patch conf {patch_path} is not exist!")
@@ -94,14 +119,22 @@ class MyTerm(miniterm.Miniterm):
 		bin_path = conf["bin"]
 		conf["bin"] = self.read_bin(bin_path)
 		sz = len(conf["bin"])
-		self.console.write(f"\nPatch Size: {sz}\n")
+		uc_str = "".join('\\x{:02x}'.format(c) for c in conf["bin"])
+		bin_hash = self.patch_hash(conf["bin"])
+		self.console.write(f"\nPatch Size: {sz} hash: {bin_hash}\n")
+		# self.console.write(f"bin: {uc_str}\n")
+		conf["sign"] = bin_hash
 		pkt = PatchPacket.from_conf(conf)
 		return bytearray(pkt) + conf["bin"]
 
 	def read_bin(self, bin_path):
-		# logger.info(f"\nload bin file: {bin_path}\n")
+		sfi_bin = bin_path.replace(".bin", "_sfi.bin")
+		if os.path.exists(sfi_bin):
+			bin_path = sfi_bin
 		with open(bin_path, "rb") as fp:
 			return fp.read()
+		logger.info(f"\nload bin file: {bin_path}\n")
+		# return '123456'.encode("utf-8")
 
 	def get_patch_bytes(self, patch):
 		sz = len(patch)
